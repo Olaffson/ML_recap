@@ -1,18 +1,18 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         python3-dev \
         libpq-dev \
-        curl \   
-        gnupg \ 
+        curl \
+        gnupg \
         && apt-get -y autoremove \
         && apt-get clean
 
-# Add Microsoft repository for msodbcsql18
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
-    && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list
+# Add Microsoft repository for msodbcsql18 (apt-key n'existe plus dans les Debian récentes)
+RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
+    && curl -fsSL https://packages.microsoft.com/config/debian/12/prod.list > /etc/apt/sources.list.d/mssql-release.list
 
 # Install msodbcsql18
 RUN apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18
