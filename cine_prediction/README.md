@@ -23,3 +23,11 @@ Les URL disponibles sont les suivantes :
 - La page `bot` donne un mini agenda de 7 jours pour optimiser les 4 salles réservées.
 - La page `prediction_VS_reel` envoie dans la base de données les chiffres du cinéma.
 
+## Configuration
+
+Les secrets ne sont plus écrits dans le code : ils sont lus depuis les variables d'environnement ou depuis un fichier `cine_prediction/.env` non versionné. Copiez `.env.example` en `.env` et remplissez les valeurs :
+
+- `DJANGO_SECRET_KEY` (obligatoire) : clé secrète Django. Pour en générer une : `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`.
+- `DJANGO_ALLOWED_HOSTS` : hôtes autorisés, séparés par des virgules.
+- `DB_SERVER`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `DRIVER` : connexion à la base Azure SQL.
+- `TMDB_API_KEY` : clé de l'API TMDB utilisée par le spider `allocine_sortie`.

@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from . import forms
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 import pandas as pd
 import os
 from joblib import load
@@ -95,6 +96,8 @@ def signup_page(request):
     return render(request, 'apllication_cine/signup.html', context={'form': form})
 
 
+@login_required(login_url='login')
+@require_POST
 def delete_data(request):
     cnxn = get_db_connection()
     cursor = cnxn.cursor()
@@ -186,16 +189,17 @@ def prediction_page(request):
 
 
 
+@login_required(login_url='login')
+@require_POST
 def scraping_view(request):
-    if request.method == 'POST':
-        # Récupérer le répertoire du fichier views.py (chemin relatif)
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        # Construire le chemin complet vers le répertoire du spider en utilisant le chemin relatif
-        spider_dir = os.path.normpath(os.path.join(current_dir, 'senscritique_scrapy/senscritique_scrapy/spiders'))
-        # Exécuter le spider
-        subprocess.run(["scrapy", "crawl", "allocine_sortie", "-O", "allocine_sortie.csv"], cwd=spider_dir)
-        # Rediriger l'utilisateur vers la page de prédiction
-        return HttpResponseRedirect(reverse('prediction'))
+    # Récupérer le répertoire du fichier views.py (chemin relatif)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # Construire le chemin complet vers le répertoire du spider en utilisant le chemin relatif
+    spider_dir = os.path.normpath(os.path.join(current_dir, 'senscritique_scrapy/senscritique_scrapy/spiders'))
+    # Exécuter le spider
+    subprocess.run(["scrapy", "crawl", "allocine_sortie", "-O", "allocine_sortie.csv"], cwd=spider_dir)
+    # Rediriger l'utilisateur vers la page de prédiction
+    return HttpResponseRedirect(reverse('prediction'))
 
 
     
