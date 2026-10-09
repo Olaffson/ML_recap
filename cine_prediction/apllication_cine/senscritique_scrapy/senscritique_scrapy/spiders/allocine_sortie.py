@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 import requests
+
+load_dotenv()
+
 df = pd.read_csv('allocine_gold.csv')
 
 
@@ -145,7 +148,8 @@ class SenscritiqueSpider(CrawlSpider):
     user_agent = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0'
 
 
-    api_key = '9d100064b2baf0f1d74a7e1af0a611d8'
+    # Clé TMDB lue depuis l'environnement (fichier .env), jamais en dur dans le code
+    api_key = os.environ['TMDB_API_KEY']
     
     def get_director_popularity(self, director_name):
         url = f'https://api.themoviedb.org/3/search/person?api_key={self.api_key}&query={director_name}'

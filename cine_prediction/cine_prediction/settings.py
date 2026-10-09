@@ -13,21 +13,33 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from pathlib import Path
 import os
 
+from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Charge les variables du fichier cine_prediction/.env (non versionné)
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-c*$hy#9+icdzkotrkys#!*i434p%7(9$c7ydjk=b661&d(5szt'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    raise ImproperlyConfigured("La variable d'environnement DJANGO_SECRET_KEY doit être définie.")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["*","20.19.138.3","cinedjango.dbgxgzc3b6dzdbb5.francecentral.azurecontainer.io"] # "localhost","0.0.0.0", "20.199.61.184" , "ml-immo.h6fgbca2b4d0c9dp.francecentral.azurecontainer.io"
+# Hôtes autorisés, séparés par des virgules (ex. DJANGO_ALLOWED_HOSTS=monsite.fr,127.0.0.1)
+ALLOWED_HOSTS = os.environ.get(
+    'DJANGO_ALLOWED_HOSTS',
+    'localhost,127.0.0.1,20.19.138.3,cinedjango.dbgxgzc3b6dzdbb5.francecentral.azurecontainer.io',
+).split(',')
 
 
 # Application definition
