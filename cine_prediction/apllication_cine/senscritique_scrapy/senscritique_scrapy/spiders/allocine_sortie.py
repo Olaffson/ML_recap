@@ -1,15 +1,12 @@
 import scrapy
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
-import subprocess
 import re
 import pandas as pd
-import numpy as np
 import pyodbc
 from dotenv import load_dotenv
 import os
 from datetime import datetime
-from datetime import datetime, timedelta
 import requests
 df = pd.read_csv('allocine_gold.csv')
 
@@ -304,9 +301,7 @@ class SenscritiqueSpider(CrawlSpider):
                 
         # Récupérer la popularité du réalisateur à partir de l'API TMDB
         director_name = item.get('realisateur')
-        if director_name:
-            director_popularity = self.get_director_popularity(director_name)
-            item['director_popularity'] = director_popularity
+        item['director_popularity'] = self.get_director_popularity(director_name) if director_name else None
             
             
         item['actor_1_popularity'] = self.get_actor_popularity(item['acteur_1'])
@@ -328,8 +323,9 @@ class SenscritiqueSpider(CrawlSpider):
 
         
         # Récupérer le budget du film à partir de l'API TMDB
-        item['budget'] = round(np.log1p(self.get_movie_budget(item['titre'])), 6)
-        item['budget'] = int(np.exp(item['budget']) - 1)
+        # TMDB renvoie None si le film est introuvable : on utilise 0 comme pour un budget inconnu
+        budget = self.get_movie_budget(item['titre'])
+        item['budget'] = int(budget) if budget else 0
 
         
             # Utiliser la fonction clean_date pour nettoyer la date
@@ -341,10 +337,14 @@ class SenscritiqueSpider(CrawlSpider):
 
         item['saison'] = get_season(item['date'])
         
-        item['reputation_distributeur'] = round(np.log1p(df.loc[df['distributeur'] == item['distributeur'], 'reputation_distributeur'].iloc[0]), 6)
-        item['nombre_films_distributeur'] = round(np.log1p(df.loc[df['distributeur'] == item['distributeur'], 'nombre_films_distributeur'].iloc[0]), 6)
-        item['reputation_distributeur'] = int(np.exp(item['reputation_distributeur']) - 1)
-        item['nombre_films_distributeur'] = int(np.exp(item['nombre_films_distributeur']) - 1)
+        # Distributeur absent de allocine_gold.csv : réputation et nombre de films à 0
+        distributeur = df.loc[df['distributeur'] == item['distributeur']]
+        if distributeur.empty:
+            item['reputation_distributeur'] = 0
+            item['nombre_films_distributeur'] = 0
+        else:
+            item['reputation_distributeur'] = int(distributeur['reputation_distributeur'].iloc[0])
+            item['nombre_films_distributeur'] = int(distributeur['nombre_films_distributeur'].iloc[0])
         
         item['type'] = response.xpath(
             '//span[@class="what light" and contains(text(), "Type de film")]/following-sibling::span[@class="that"]/text()').get()
@@ -381,10 +381,6 @@ class SenscritiqueSpider(CrawlSpider):
         
         # Valider les changements dans la base de données
         cnxn.commit()
-        
-# Fonction pour exécuter le web scraping
-def run_spider():
-    subprocess.run(["scrapy", "crawl", "allocine_sortie"])
+        cursor.close()
+        cnxn.close()
 
-
-run_spider()
